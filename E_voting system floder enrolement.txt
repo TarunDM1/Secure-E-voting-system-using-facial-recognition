@@ -1,0 +1,24 @@
+evote_face_auth/
+├── README.md
+├── requirements.txt
+├── app.py
+├── config.py
+├── db.py
+├── schema.sql
+├── scripts/
+│   ├── init_db.py
+│   └── enroll_voter.py
+├── face/
+│   ├── __init__.py
+│   ├── capture.py
+│   ├── preprocess.py
+│   ├── eigenface.py
+│   ├── gabor.py
+│   └── matcher.py
+├── templates/
+│   ├── login.html
+│   ├── vote.html
+│   └── result.html
+└── data/
+    ├── voters.db
+    └── registered_photos/
