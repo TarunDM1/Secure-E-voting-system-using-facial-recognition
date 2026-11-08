@@ -1,0 +1,593 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% set challenge_seq = challenge_seq | default(['LEFT','RIGHT']) %}
+
+<style>
+  /* ===== Make this page use full width inside base container ===== */
+  .app-shell { max-width: 100% !important; width: 100% !important; }
+  .main-wrap { padding-top: 14px !important; padding-bottom: 14px !important; }
+  .glass { padding: 16px !important; }
+
+  /* ===== Full-screen layout ===== */
+  .login-full {
+    height: calc(100vh - 140px);
+    min-height: 620px;
+  }
+  .login-shell {
+    height: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  @media (min-width: 992px) {
+    .login-shell { grid-template-columns: 0.95fr 1.05fr; }
+  }
+
+  .pane {
+    height: 100%;
+    border: 1px solid rgba(0,0,0,.06);
+    border-radius: 20px;
+    background: rgba(255,255,255,.88);
+    box-shadow: 0 10px 26px rgba(0,0,0,.06);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .pane-head {
+    padding: 16px 18px 12px 18px;
+    border-bottom: 1px solid rgba(0,0,0,.06);
+    background: linear-gradient(180deg, rgba(13,110,253,.08), rgba(255,255,255,.0));
+  }
+  .pane-body {
+    padding: 16px 18px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow: hidden;
+  }
+  .pane-foot {
+    padding: 12px 18px;
+    border-top: 1px solid rgba(0,0,0,.06);
+    background: rgba(0,0,0,.015);
+  }
+
+  .title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: -0.2px;
+  }
+  .subtitle {
+    margin-top: 6px;
+    color: rgba(0,0,0,.62);
+    font-size: .95rem;
+  }
+  .badge-soft {
+    background: rgba(13,110,253,.10);
+    color: #0d6efd;
+    border: 1px solid rgba(13,110,253,.18);
+    padding: .35rem .6rem;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: .85rem;
+    white-space: nowrap;
+  }
+
+  /* Steps */
+  .step-card {
+    border: 1px solid rgba(0,0,0,.06);
+    border-radius: 16px;
+    padding: 10px 12px;
+    background: rgba(255,255,255,.92);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .step-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .28rem .62rem;
+    border-radius: 999px;
+    border: 1px solid rgba(0,0,0,.10);
+    font-weight: 900;
+    font-size: .85rem;
+  }
+  .step-left  { background: rgba(255,193,7,.18); color: #8a6400; border-color: rgba(255,193,7,.30); }
+  .step-right { background: rgba(25,135,84,.14); color: #198754; border-color: rgba(25,135,84,.22); }
+
+  .hint { color: rgba(0,0,0,.58); font-size: .92rem; line-height: 1.35; }
+
+  /* Feature blocks */
+  .info-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  @media (min-width: 1200px) { .info-grid { grid-template-columns: 1fr 1fr; } }
+  .info-box {
+    border: 1px solid rgba(0,0,0,.06);
+    border-radius: 16px;
+    padding: 12px;
+    background: rgba(255,255,255,.92);
+  }
+  .info-title {
+    font-weight: 800;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .dot {
+    width: 10px; height: 10px; border-radius: 999px;
+    background: linear-gradient(135deg, #0d6efd, #20c997);
+    box-shadow: 0 0 0 4px rgba(13,110,253,.14);
+  }
+
+  /* Camera */
+  .video-frame {
+    width: 100%;
+    border-radius: 18px;
+    border: 1px solid rgba(0,0,0,.10);
+    background: #0b0f18;
+    overflow: hidden;
+    flex: 1;
+    min-height: 340px;
+    display: grid;
+    place-items: center;
+  }
+  video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transform: scaleX(-1);
+  }
+  .snapshot {
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    border-radius: 18px;
+    border: 1px solid rgba(0,0,0,.10);
+  }
+
+  .mini { font-size: .83rem; color: rgba(0,0,0,.55); }
+  .status-text { color: rgba(0,0,0,.60); font-size: .92rem; }
+
+  .controls { display: grid; gap: 10px; margin-top: auto; }
+
+  .progress { height: 10px; border-radius: 999px; }
+  .progress-bar { border-radius: 999px; }
+
+  @media (max-height: 720px) {
+    .login-full { height: auto; min-height: unset; }
+    .pane { height: auto; }
+  }
+</style>
+
+<div class="login-full">
+  <div class="login-shell">
+
+    <!-- LEFT -->
+    <div class="pane">
+      <div class="pane-head">
+        <div class="d-flex align-items-start justify-content-between gap-2 flex-wrap">
+          <div>
+            <h2 class="title">Voter Login</h2>
+            <div class="subtitle">Authenticate using face verification + two-step liveness.</div>
+          </div>
+          <span class="badge-soft">Secure Demo Mode</span>
+        </div>
+      </div>
+
+      <div class="pane-body">
+        <form id="loginForm" method="POST" action="{{ url_for('login') }}">
+          <label class="form-label fw-semibold mb-1">National ID</label>
+          <input class="form-control form-control-lg" name="national_id" placeholder="e.g., 1234" required>
+
+          <!-- Hidden fields expected by backend -->
+          <input type="hidden" name="image_b64" id="image_b64">
+          <input type="hidden" name="frames_step1" id="frames_step1">
+          <input type="hidden" name="frames_step2" id="frames_step2">
+
+          <!-- IMPORTANT: send the challenge directions too -->
+          <input type="hidden" name="step1_dir" id="step1_dir">
+          <input type="hidden" name="step2_dir" id="step2_dir">
+
+          <div class="mt-2">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+              <div class="fw-semibold">Liveness Steps</div>
+              <div class="mini">Turn your head clearly (not just eyes)</div>
+            </div>
+
+            <div class="mt-2 d-grid gap-2">
+              <div class="step-card">
+                <div>
+                  <div class="mini">Step 1</div>
+                  <div class="fw-semibold">Turn head</div>
+                </div>
+                <span class="step-pill {% if challenge_seq[0]=='LEFT' %}step-left{% else %}step-right{% endif %}">
+                  <span id="c1">{{ challenge_seq[0] }}</span>
+                </span>
+              </div>
+
+              <div class="step-card">
+                <div>
+                  <div class="mini">Step 2</div>
+                  <div class="fw-semibold">Turn head</div>
+                </div>
+                <span class="step-pill {% if challenge_seq[1]=='LEFT' %}step-left{% else %}step-right{% endif %}">
+                  <span id="c2">{{ challenge_seq[1] }}</span>
+                </span>
+              </div>
+            </div>
+
+            <div class="hint mt-2">
+              Keep your face centered, good lighting, and move your head slowly left/right.
+              If you fail, try again with more head movement.
+            </div>
+          </div>
+
+          <div class="controls mt-2">
+            <div>
+              <div class="d-flex justify-content-between mini">
+                <span>Capture progress</span>
+                <span id="progressText">Idle</span>
+              </div>
+              <div class="progress mt-1">
+                <div class="progress-bar" id="progressBar" role="progressbar" style="width:0%"></div>
+              </div>
+            </div>
+
+            <button id="authBtn" class="btn btn-primary btn-lg w-100" type="submit">
+              Authenticate (Webcam)
+            </button>
+
+            <div class="info-grid">
+              <div class="info-box">
+                <div class="info-title"><span class="dot"></span> How it works</div>
+                <div class="mini">
+                  1) Liveness (two-step head turn)<br>
+                  2) Face match with stored template<br>
+                  3) One-voter-one-vote enforcement
+                </div>
+              </div>
+
+              <div class="info-box">
+                <div class="info-title"><span class="dot"></span> Troubleshooting</div>
+                <div class="mini">
+                  • Camera blocked → allow from browser lock icon<br>
+                  • Camera busy → close Zoom/Teams/OBS<br>
+                  • Liveness fails → move head more clearly
+                </div>
+              </div>
+            </div>
+
+            <div class="mini">
+              Privacy note: Frames are used only for verification (demo).
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="pane-foot">
+        <div class="d-flex justify-content-between flex-wrap gap-2">
+          <div class="mini">Authentication: Face + Liveness</div>
+          <div class="mini">Status: <span id="leftStatus">Ready</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="pane">
+      <div class="pane-head">
+        <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+          <div>
+            <div class="mini">Webcam Preview</div>
+            <div class="fw-semibold">Align your face and keep steady</div>
+            <div class="status-text mt-1" id="camStatus">Requesting camera permission…</div>
+          </div>
+          <span class="badge text-bg-secondary" id="camBadge">Starting…</span>
+        </div>
+      </div>
+
+      <div class="pane-body" style="gap: 12px;">
+        <div class="video-frame">
+          <video id="video" autoplay muted playsinline></video>
+        </div>
+
+        <canvas id="canvas" style="display:none;"></canvas>
+        <img id="snapshot" class="snapshot" alt="Captured snapshot" style="display:none;" />
+
+        <div class="d-flex gap-2">
+          <button id="restartBtn" type="button" class="btn btn-outline-primary w-50">
+            Restart Camera
+          </button>
+          <button id="capBtn" type="button" class="btn btn-outline-secondary w-50" disabled>
+            Capture Preview
+          </button>
+        </div>
+
+        <div class="mini">
+          Tip: keep your head inside frame; do not sit too far. Use a light in front of you.
+        </div>
+      </div>
+
+      <div class="pane-foot">
+        <div class="d-flex justify-content-between flex-wrap gap-2">
+          <div class="mini">Capture: <span id="capInfo">Idle</span></div>
+          <div class="mini">Challenge: <strong>{{ challenge_seq[0] }}</strong> then <strong>{{ challenge_seq[1] }}</strong></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ---------- Elements ----------
+  const video = document.getElementById("video");
+  const canvas = document.getElementById("canvas");
+  const snapshot = document.getElementById("snapshot");
+
+  const camStatus = document.getElementById("camStatus");
+  const camBadge  = document.getElementById("camBadge");
+  const capInfo   = document.getElementById("capInfo");
+  const leftStatus = document.getElementById("leftStatus");
+
+  const progressBar  = document.getElementById("progressBar");
+  const progressText = document.getElementById("progressText");
+
+  const restartBtn = document.getElementById("restartBtn");
+  const capBtn     = document.getElementById("capBtn");
+
+  const form   = document.getElementById("loginForm");
+  const authBtn = document.getElementById("authBtn");
+
+  const imgB64       = document.getElementById("image_b64");
+  const framesStep1  = document.getElementById("frames_step1");
+  const framesStep2  = document.getElementById("frames_step2");
+
+  const step1DirEl = document.getElementById("c1");
+  const step2DirEl = document.getElementById("c2");
+  const step1Dir = (step1DirEl?.textContent || "LEFT").trim();
+  const step2Dir = (step2DirEl?.textContent || "RIGHT").trim();
+
+  // send challenge dirs to backend (IMPORTANT)
+  document.getElementById("step1_dir").value = step1Dir;
+  document.getElementById("step2_dir").value = step2Dir;
+
+  // ---------- Camera ----------
+  let stream = null;
+
+  function setBadge(text, type="secondary") {
+    camBadge.className = "badge text-bg-" + type;
+    camBadge.textContent = text;
+  }
+
+  function setProgress(pct, text) {
+    progressBar.style.width = pct + "%";
+    progressText.textContent = text;
+  }
+
+  function stopCamera() {
+    if (stream) {
+      stream.getTracks().forEach(t => t.stop());
+      stream = null;
+    }
+  }
+
+  async function startCamera() {
+    try {
+      setBadge("Starting…", "secondary");
+      camStatus.textContent = "Requesting camera permission…";
+      leftStatus.textContent = "Starting camera…";
+      capInfo.textContent = "Idle";
+      setProgress(0, "Idle");
+
+      stopCamera();
+
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false
+      });
+
+      video.srcObject = stream;
+
+      // Ensure metadata is loaded, then play
+      await new Promise((resolve) => {
+        if (video.readyState >= 2) return resolve();
+        video.onloadedmetadata = () => resolve();
+      });
+
+      await video.play();
+
+      setBadge("Live", "success");
+      camStatus.textContent = "Camera started ✅ Keep your face centered.";
+      leftStatus.textContent = "Camera live";
+      capBtn.disabled = false;
+
+    } catch (err) {
+      console.error("Camera error:", err);
+      setBadge("Blocked", "danger");
+      camStatus.textContent = "Camera error: " + err.name + " - " + err.message;
+      leftStatus.textContent = "Camera blocked";
+      capBtn.disabled = true;
+    }
+  }
+
+  // ---------- Capture helpers ----------
+  function wait(ms) {
+    return new Promise(r => setTimeout(r, ms));
+  }
+
+  function captureFrameDataURL(maxW = 320, jpegQuality = 0.55) {
+    const vw = video.videoWidth || 0;
+    const vh = video.videoHeight || 0;
+    if (!vw || !vh) return null;
+
+    const scale = Math.min(1, maxW / vw);
+    const w = Math.round(vw * scale);
+    const h = Math.round(vh * scale);
+
+    canvas.width = w;
+    canvas.height = h;
+
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+    // un-mirror capture (because video is mirrored in CSS)
+    ctx.save();
+    ctx.translate(w, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0, w, h);
+    ctx.restore();
+
+    return canvas.toDataURL("image/jpeg", jpegQuality);
+  }
+
+  async function captureBurst(count = 14, gapMs = 180, label = "") {
+    const frames = [];
+
+    // small warm-up to avoid 0x0 capture on some browsers
+    if (!video.videoWidth || !video.videoHeight) {
+      await wait(250);
+    }
+
+    for (let i = 0; i < count; i++) {
+      const d = captureFrameDataURL(320, 0.50);
+      if (d) frames.push(d);
+
+      if (label) capInfo.textContent = `${label} (${i+1}/${count})`;
+      await wait(gapMs);
+    }
+    return frames;
+  }
+
+  function resetUIToReady(msg = "Ready") {
+    authBtn.disabled = false;
+    restartBtn.disabled = false;
+    capBtn.disabled = !stream;
+    setBadge(stream ? "Live" : "Starting…", stream ? "success" : "secondary");
+    camStatus.textContent = stream ? "Camera running ✅ Try again." : "Starting camera…";
+    capInfo.textContent = "Idle";
+    leftStatus.textContent = msg;
+    setProgress(0, "Idle");
+  }
+
+  // ---------- UI actions ----------
+  capBtn.addEventListener("click", () => {
+    const d = captureFrameDataURL(520, 0.70);
+    if (!d) {
+      alert("Camera not ready yet. Wait 1–2 seconds and try again.");
+      return;
+    }
+    snapshot.src = d;
+    snapshot.style.display = "block";
+    imgB64.value = d;
+    capInfo.textContent = "Preview captured";
+    camStatus.textContent = "Preview captured ✅";
+  });
+
+  restartBtn.addEventListener("click", () => {
+    snapshot.style.display = "none";
+
+    // clear payload fields
+    imgB64.value = "";
+    framesStep1.value = "";
+    framesStep2.value = "";
+
+    authBtn.disabled = false;
+    restartBtn.disabled = false;
+    capBtn.disabled = true;
+
+    setProgress(0, "Idle");
+    startCamera();
+  });
+
+  window.addEventListener("load", () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setBadge("Unsupported", "danger");
+      camStatus.textContent = "Your browser does not support camera access (getUserMedia).";
+      return;
+    }
+    startCamera();
+  });
+
+  window.addEventListener("beforeunload", stopCamera);
+
+  // ---------- Submit (2-step liveness) ----------
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    if (!stream) {
+      alert("Camera not running. Click Restart Camera.");
+      return;
+    }
+
+    // hard stop: national id must be present
+    const nid = form.querySelector('input[name="national_id"]')?.value?.trim();
+    if (!nid) {
+      alert("Enter National ID.");
+      return;
+    }
+
+    authBtn.disabled = true;
+    capBtn.disabled = true;
+    restartBtn.disabled = true;
+
+    try {
+      // Step 1
+      setBadge("Step 1", "primary");
+      camStatus.textContent = "Step 1: Turn head " + step1Dir + " (capturing…)";
+      leftStatus.textContent = "Capturing step 1…";
+      setProgress(15, "Capturing step 1");
+
+      const burst1 = await captureBurst(18, 160, "Step 1 frames");
+
+      // Step 2
+      setBadge("Step 2", "primary");
+      camStatus.textContent = "Step 2: Turn head " + step2Dir + " (capturing…)";
+      leftStatus.textContent = "Capturing step 2…";
+      setProgress(55, "Capturing step 2");
+
+      const burst2 = await captureBurst(18, 160, "Step 2 frames");
+
+      if (burst1.length < 6 || burst2.length < 6) {
+        // if too few frames, your backend may not have enough detections
+        alert("Could not capture enough liveness frames. Try again with better lighting and bigger head movement.");
+        resetUIToReady("Ready");
+        return;
+      }
+
+      // store bursts
+      framesStep1.value = JSON.stringify(burst1);
+      framesStep2.value = JSON.stringify(burst2);
+
+      // Face image for matching - last frame is usually most stable
+      imgB64.value = burst2[burst2.length - 1];
+      snapshot.src = imgB64.value;
+      snapshot.style.display = "block";
+
+      setBadge("Submitting…", "secondary");
+      camStatus.textContent = "Submitting for verification…";
+      leftStatus.textContent = "Submitting…";
+      setProgress(90, "Submitting");
+
+      // Optional: keep camera running while submit? Some backends don't care.
+      // If you stop it and the browser navigates, it's fine either way.
+      stopCamera();
+
+      form.submit();
+
+    } catch (err) {
+      console.error(err);
+      alert("Error during capture: " + err.message);
+
+      // attempt to restore camera if stopped
+      if (!stream) {
+        await startCamera();
+      }
+      resetUIToReady("Ready");
+    }
+  });
+</script>
+
+{% endblock %}

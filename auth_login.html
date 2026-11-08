@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  .auth-wrap{max-width:980px;margin:0 auto;}
+  .auth-card{border:0;border-radius:22px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.10)}
+  .auth-left{background:linear-gradient(135deg,#0d6efd,#20c997);color:#fff;padding:28px}
+  .auth-right{padding:28px;background:#fff}
+  .pill{display:inline-flex;gap:8px;align-items:center;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.28)}
+  .role-btn{border-radius:14px}
+  .role-btn.active{border:2px solid #0d6efd; background:rgba(13,110,253,.06)}
+</style>
+
+<div class="auth-wrap">
+  <div class="row g-0 auth-card">
+    <div class="col-12 col-lg-5 auth-left">
+      <div class="pill mb-3">🔒 Secure E-Voting</div>
+      <h2 class="fw-bold mb-2">Sign in</h2>
+      <div class="opacity-75 mb-4">
+        Choose your role and continue to your dashboard.
+      </div>
+
+      <div class="mb-3">
+        <div class="fw-semibold">Voter</div>
+        <div class="opacity-75 small">Login → Face verification → Vote</div>
+      </div>
+
+      <div class="mb-3">
+        <div class="fw-semibold">Admin</div>
+        <div class="opacity-75 small">Manage voters, positions, candidates, results</div>
+      </div>
+
+      <div class="opacity-75 small">
+        Tip: Use “Remember me” to keep your email saved on this device.
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-7 auth-right">Forgot
+      <h4 class="fw-bold mb-1">Account Login</h4>
+      <div class="text-muted mb-3">Enter your email and password</div>
+
+      <form method="POST" action="{{ url_for('auth_login') }}">
+        <div class="mb-2 fw-semibold">Login as</div>
+
+        <div class="d-flex gap-2 mb-3">
+          <button type="button" class="btn btn-outline-primary w-50 role-btn" id="btnVoter">Voter</button>
+          <button type="button" class="btn btn-outline-dark w-50 role-btn" id="btnAdmin">Admin</button>
+        </div>
+
+        <input type="hidden" name="role" id="role" value="voter">
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Email</label>
+          <input class="form-control form-control-lg" name="email" type="email" required placeholder="you@gmail.com">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Password</label>
+          <!--<input class="form-control form-control-lg" name="password" type="password" required placeholder="••••••••"> -->
+          <div class="input-group input-group-lg">
+            <input id="password" class="form-control" name="password" type="password" required placeholder="">
+           <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+              👁
+           </button>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="1" id="remember" name="remember">
+            <label class="form-check-label" for="remember">Remember me</label>
+          </div>
+         <!-- <a class="small text-decoration-none" href="#" onclick="alert('Add Forgot Password flow later');return false;">Forgot password?</a>  -->
+            <a class="small text-decoration-none" href="{{ url_for('auth_help') }}">Forgot password?</a>
+        </div>
+
+        <button class="btn btn-primary btn-lg w-100">Sign in</button>
+
+        <div class="d-flex gap-2 mt-3">
+          <a class="btn btn-outline-secondary w-50" href="{{ url_for('auth_register_voter') }}">Create Voter Account</a>
+          <!--<a class="btn btn-outline-secondary w-50" href="{{ url_for('auth_register_admin', key='admin123') }}">Create Admin</a>-->
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  const role = document.getElementById("role");
+  const btnVoter = document.getElementById("btnVoter");
+  const btnAdmin = document.getElementById("btnAdmin");
+
+  function setRole(r){
+    role.value = r;
+
+    // Active styling
+    if (r === "voter") {
+      btnVoter.classList.add("active", "btn-primary");
+      btnVoter.classList.remove("btn-outline-primary");
+      btnAdmin.classList.remove("active", "btn-dark");
+      btnAdmin.classList.add("btn-outline-dark");
+    } else {
+      btnAdmin.classList.add("active", "btn-dark");
+      btnAdmin.classList.remove("btn-outline-dark");
+      btnVoter.classList.remove("active", "btn-primary");
+      btnVoter.classList.add("btn-outline-primary");
+    }
+  }
+
+  btnVoter.addEventListener("click", () => setRole("voter"));
+  btnAdmin.addEventListener("click", () => setRole("admin"));
+  setRole("voter");
+</script>
+
+<script>
+  const togglePassword = document.getElementById("togglePassword");
+  const passwordInput = document.getElementById("password");
+
+  togglePassword.addEventListener("click", () => {
+    const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
+    passwordInput.setAttribute("type", type);
+
+    // Change icon
+    togglePassword.textContent = type === "password" ? "👁" : "🙈";
+  });
+</script>
+
+{% endblock %}

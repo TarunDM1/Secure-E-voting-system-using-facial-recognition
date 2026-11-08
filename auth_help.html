@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .help-wrap{max-width:980px;margin:0 auto;}
+  .help-card{
+    border:0;border-radius:22px;overflow:hidden;
+    box-shadow:0 18px 45px rgba(0,0,0,.10);
+    background:rgba(255,255,255,.92);
+  }
+  .help-left{
+    background:linear-gradient(135deg,#0d6efd,#20c997);
+    color:#fff;padding:28px;
+  }
+  .help-right{padding:28px;background:#fff;}
+  .pill{
+    display:inline-flex;gap:8px;align-items:center;
+    padding:6px 12px;border-radius:999px;
+    background:rgba(255,255,255,.18);
+    border:1px solid rgba(255,255,255,.28);
+    font-weight:700;font-size:.9rem;
+  }
+  .card-mini{
+    border:1px solid rgba(0,0,0,.06);
+    border-radius:16px;
+    padding:12px;
+    background:rgba(255,255,255,.95);
+  }
+  .dot{
+    width:10px;height:10px;border-radius:999px;
+    background:linear-gradient(135deg,#0d6efd,#20c997);
+    box-shadow:0 0 0 4px rgba(13,110,253,.14);
+    display:inline-block;
+  }
+  .muted{color:rgba(255,255,255,.78)}
+  .muted2{color:rgba(0,0,0,.62)}
+  .icon-badge{
+    width:44px;height:44px;border-radius:14px;
+    display:grid;place-items:center;
+    background:rgba(13,110,253,.10);
+    border:1px solid rgba(13,110,253,.18);
+    color:#0d6efd;font-size:20px;flex:0 0 auto;
+  }
+  .list-clean{margin:0;padding-left:18px;color:rgba(0,0,0,.70)}
+  .list-clean li{margin:.35rem 0}
+</style>
+
+<div class="help-wrap">
+  <div class="row g-0 help-card">
+
+    <!-- LEFT -->
+    <div class="col-12 col-lg-5 help-left">
+      <div class="pill mb-3">🔐 Password Assistance</div>
+      <h2 class="fw-bold mb-2">Forgot your password?</h2>
+      <div class="muted mb-4">
+        For security, password resets are handled through verified channels.
+      </div>
+
+      <div class="card-mini mb-3" style="background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.22);">
+        <div class="d-flex align-items-start gap-2">
+          <span class="dot mt-1" style="box-shadow:0 0 0 4px rgba(255,255,255,.16)"></span>
+          <div>
+            <div class="fw-semibold">Why this process?</div>
+            <div class="muted small">
+              E-Voting systems must prevent unauthorized access. Reset requests are verified by the administrator.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="muted small">
+        Tip: If you can still log in on another device, update your password from your profile (if your system supports it).
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="col-12 col-lg-7 help-right">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+        <div>
+          <h4 class="fw-bold mb-1">How to regain access</h4>
+          <div class="muted2">Follow the steps below to reset your account securely.</div>
+        </div>
+        <span class="badge text-bg-light border">Support</span>
+      </div>
+
+      <div class="d-grid gap-3 mt-3">
+
+        <div class="d-flex gap-3">
+          <div class="icon-badge">1</div>
+          <div>
+            <div class="fw-semibold">Contact the Election Admin</div>
+            <div class="text-muted small">
+              Reach out to the admin and request a password reset.
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex gap-3">
+          <div class="icon-badge">2</div>
+          <div>
+            <div class="fw-semibold">Share verification details</div>
+            <div class="text-muted small mb-2">
+              Provide any of the following so your account can be verified:
+            </div>
+            <ul class="list-clean small">
+              <li>Registered email address</li>
+              <li>National ID (used during registration)</li>
+              <li>Any voter reference/registration number (if applicable)</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="d-flex gap-3">
+          <div class="icon-badge">3</div>
+          <div>
+            <div class="fw-semibold">Receive a new password</div>
+            <div class="text-muted small">
+              After verification, the admin will reset your password. Log in and change it if your system allows.
+            </div>
+          </div>
+        </div>
+
+        <div class="alert alert-warning mb-0">
+          <strong>Security note:</strong>
+          Never share your password with anyone. The admin will reset it — they should not ask for your current password.
+        </div>
+
+        <div class="d-flex gap-2 flex-wrap">
+          <a class="btn btn-primary" href="{{ url_for('auth_login') }}">Back to Login</a>
+          <a class="btn btn-outline-secondary" href="{{ url_for('home') }}">Go to Home</a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

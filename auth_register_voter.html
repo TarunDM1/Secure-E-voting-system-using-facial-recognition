@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-body p-4">
+    <h4 class="fw-bold mb-2">Voter Registration</h4>
+    <div class="text-muted mb-3">Create an account linked to your National ID</div>
+
+    <form method="POST" action="{{ url_for('auth_register_voter') }}">
+  <div class="mb-3">
+    <label class="form-label fw-semibold">National ID</label>
+    <input class="form-control form-control-lg" name="national_id" required>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label fw-semibold">Full Name</label>
+    <input class="form-control form-control-lg" name="full_name" required>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label fw-semibold">Email</label>
+    <input class="form-control form-control-lg" type="email" name="email" required>
+  </div>
+
+  <div class="mb-3 position-relative">
+  <label class="form-label fw-semibold">Password</label>
+  <input id="password" class="form-control form-control-lg pe-5" type="password" name="password" required>
+  <span onclick="togglePwd('password', this)"
+        style="position:absolute; right:14px; top:48px; cursor:pointer;">👁</span>
+  </div>
+
+  <div class="mb-3 position-relative">
+  <label class="form-label fw-semibold">Confirm Password</label>
+  <input id="confirm_password" class="form-control form-control-lg pe-5" type="password" name="confirm_password" required>
+  <span onclick="togglePwd('confirm_password', this)"
+        style="position:absolute; right:14px; top:48px; cursor:pointer;">👁</span>
+  </div>
+
+  <button class="btn btn-primary btn-lg w-100" type="submit">Create Account</button>
+
+  <a class="btn btn-outline-secondary w-100 mt-2" href="{{ url_for('auth_login') }}">Back to Login</a>
+</form>
+  </div>
+</div>
+
+<script>
+function togglePwd(id, el){
+  const input = document.getElementById(id);
+  if(input.type === "password"){
+    input.type = "text";
+    el.textContent = "🙈";
+  } else {
+    input.type = "password";
+    el.textContent = "👁";
+  }
+}
+</script>
+
+{% endblock %}

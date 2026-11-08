@@ -1,0 +1,131 @@
+{% extends "admin_base.html" %}
+{% block content %}
+
+<div class="card-soft p-3 p-md-4 mb-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div>
+      <div class="fw-bold">Candidates</div>
+      <div class="small text-muted">Add, edit, activate/deactivate or delete candidates</div>
+    </div>
+    <a class="btn btn-sm btn-outline-dark" href="{{ url_for('admin', key='admin123') }}">Back to Dashboard</a>
+  </div>
+
+  <!-- ADD CANDIDATE -->
+  <form method="POST" enctype="multipart/form-data" class="row g-2 mt-3">
+    <input type="hidden" name="action" value="add">
+
+    <div class="col-md-3">
+      <select class="form-select" name="position_id" required>
+        <option value="">Select Position</option>
+        {% for p in positions %}
+          <option value="{{ p['id'] }}">{{ p['title'] }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <input class="form-control" name="name" placeholder="Candidate Name" required>
+    </div>
+
+    <div class="col-md-3">
+      <input class="form-control" name="party" placeholder="Party / Group">
+    </div>
+
+    <div class="col-md-2">
+      <input class="form-control" type="file" name="logo" accept=".png,.jpg,.jpeg,.webp">
+    </div>
+
+    <div class="col-md-1">
+      <button class="btn btn-primary w-100">Add</button>
+    </div>
+  </form>
+</div>
+
+<!-- EXISTING CANDIDATES -->
+<div class="card-soft p-3 p-md-4">
+  <div class="fw-bold mb-2">Existing Candidates</div>
+
+  <div class="table-responsive">
+    <table class="table table-sm align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Logo</th>
+          <th>Name</th>
+          <th>Party</th>
+          <th>Position</th>
+          <th>Status</th>
+          <th style="width:260px;">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for c in candidates %}
+        <tr>
+          <td>
+            {% if c["logo_path"] %}
+              <img src="{{ url_for('static', filename=c['logo_path']) }}" width="48">
+            {% endif %}
+          </td>
+
+          <td>{{ c["name"] }}</td>
+          <td>{{ c["party"] }}</td>
+          <td>{{ c["position_title"] }}</td>
+
+          <td>
+            {% if c["is_active"] == 1 %}
+              <span class="badge text-bg-success">Active</span>
+            {% else %}
+              <span class="badge text-bg-secondary">Inactive</span>
+            {% endif %}
+          </td>
+
+          <td>
+
+            <!-- EDIT -->
+            <form method="POST" enctype="multipart/form-data" class="mb-1">
+              <input type="hidden" name="action" value="edit">
+              <input type="hidden" name="id" value="{{ c['id'] }}">
+
+              <div class="input-group input-group-sm mb-1">
+                <input class="form-control" name="name" value="{{ c['name'] }}">
+                <input class="form-control" name="party" value="{{ c['party'] }}">
+              </div>
+
+              <select class="form-select form-select-sm mb-1" name="position_id">
+                {% for p in positions %}
+                  <option value="{{ p['id'] }}" {% if p['id']==c['position_id'] %}selected{% endif %}>
+                    {{ p['title'] }}
+                  </option>
+                {% endfor %}
+              </select>
+
+              <input type="file" class="form-control form-control-sm mb-1" name="logo">
+
+              <button class="btn btn-sm btn-outline-primary w-100">Save</button>
+            </form>
+
+            <!-- TOGGLE -->
+            <form method="POST" class="mb-1">
+              <input type="hidden" name="action" value="toggle">
+              <input type="hidden" name="id" value="{{ c['id'] }}">
+              <button class="btn btn-sm btn-outline-dark w-100">
+                {% if c["is_active"] == 1 %}Deactivate{% else %}Activate{% endif %}
+              </button>
+            </form>
+
+            <!-- DELETE -->
+            <form method="POST" onsubmit="return confirm('Delete candidate?');">
+              <input type="hidden" name="action" value="delete">
+              <input type="hidden" name="id" value="{{ c['id'] }}">
+              <button class="btn btn-sm btn-outline-danger w-100">Delete</button>
+            </form>
+
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

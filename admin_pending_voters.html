@@ -1,0 +1,139 @@
+{% extends "admin_base.html" %}
+{% block content %}
+
+<style>
+  .pill {
+    display:inline-flex; align-items:center; gap:8px;
+    padding:6px 12px; border-radius:999px;
+    border:1px solid rgba(0,0,0,.08);
+    background:rgba(255,255,255,.85);
+    font-weight:700; font-size:.86rem;
+  }
+  .pill .dot {
+    width:10px; height:10px; border-radius:999px;
+    background: linear-gradient(135deg,#0d6efd,#20c997);
+    box-shadow: 0 0 0 4px rgba(13,110,253,.12);
+  }
+  .soft-muted { color: rgba(0,0,0,.60); }
+  .table-sticky thead th{
+    position: sticky; top: 0; z-index: 2;
+    background: var(--bs-table-bg, #f8f9fa);
+  }
+  .row-actions form { display:inline; }
+  .empty-box{
+    border:1px dashed rgba(0,0,0,.18);
+    border-radius:18px;
+    padding:18px;
+    background: rgba(255,255,255,.70);
+  }
+  .badge-soft{
+    background: rgba(13,110,253,.10);
+    color:#0d6efd;
+    border:1px solid rgba(13,110,253,.18);
+  }
+</style>
+
+<div class="card-soft p-3 p-md-4">
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+    <div>
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <div class="fw-bold" style="font-size:1.1rem;">Pending Voter Requests</div>
+        <span class="pill"><span class="dot"></span> Approval Queue</span>
+        <span class="badge badge-soft">{{ pending|length }} pending</span>
+      </div>
+      <div class="small soft-muted mt-1">
+        Approve or reject self-registrations. Approved voters will be added to the voter list and can log in.
+      </div>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+      <a class="btn btn-sm btn-outline-dark" href="{{ url_for('admin_voters', key='admin123') }}">Back to Voters</a>
+      <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin', key='admin123') }}">Dashboard</a>
+    </div>
+  </div>
+
+  <hr class="my-3">
+
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+    <div class="small soft-muted">
+      Tip: Use search to filter by National ID / Name / Email.
+    </div>
+    <input id="searchBox" class="form-control form-control-sm" style="max-width:340px"
+           placeholder="Search National ID / Name / Email">
+  </div>
+
+  {% if not pending %}
+    <div class="empty-box">
+      <div class="d-flex align-items-start gap-3">
+        <div class="rounded-4 d-grid place-items-center"
+             style="width:44px;height:44px;background:rgba(25,135,84,.12);border:1px solid rgba(25,135,84,.18);">
+          ✅
+        </div>
+        <div>
+          <div class="fw-semibold">No pending requests</div>
+          <div class="small soft-muted">
+            When a voter self-registers and is not in the voter list, their request will appear here.
+          </div>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <div class="table-responsive" style="max-height: 560px;">
+      <table class="table table-sm table-hover align-middle table-sticky" id="pendingTable">
+        <thead class="table-light">
+          <tr>
+            <th style="width:70px;">ID</th>
+            <th style="width:150px;">National ID</th>
+            <th style="min-width:180px;">Name</th>
+            <th style="min-width:260px;">Email</th>
+            <th style="width:170px;">Requested At</th>
+            <th style="width:240px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in pending %}
+          <tr>
+            <td class="text-muted">{{ p["id"] }}</td>
+            <td class="fw-semibold">{{ p["national_id"] }}</td>
+            <td>{{ p["full_name"] }}</td>
+            <td>{{ p["email"] }}</td>
+            <td class="text-muted">{{ p["created_at"] }}</td>
+
+            <td class="row-actions d-flex gap-2">
+              <form method="POST" action="{{ url_for('admin_pending_voters', key='admin123') }}">
+                <input type="hidden" name="action" value="approve">
+                <input type="hidden" name="id" value="{{ p['id'] }}">
+                <button class="btn btn-sm btn-success" type="submit">Approve</button>
+              </form>
+
+              <form method="POST"
+                    action="{{ url_for('admin_pending_voters', key='admin123') }}"
+                    onsubmit="return confirm('Reject this request?');">
+                <input type="hidden" name="action" value="reject">
+                <input type="hidden" name="id" value="{{ p['id'] }}">
+                <button class="btn btn-sm btn-outline-danger" type="submit">Reject</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const searchBox = document.getElementById("searchBox");
+  const table = document.getElementById("pendingTable");
+
+  searchBox?.addEventListener("input", () => {
+    const q = (searchBox.value || "").toLowerCase().trim();
+    table?.querySelectorAll("tbody tr").forEach(tr => {
+      tr.style.display = tr.innerText.toLowerCase().includes(q) ? "" : "none";
+    });
+  });
+</script>
+{% endblock %}

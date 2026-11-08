@@ -1,0 +1,192 @@
+{% extends "admin_base.html" %}
+{% block content %}
+
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+  <div class="d-flex gap-2 flex-wrap">
+    <form method="POST" action="{{ url_for('admin_reset') }}?key=admin123"
+          onsubmit="return confirm('RESET ELECTION? This will delete all votes and reset all voters.');">
+      <button class="btn btn-sm btn-danger" type="submit">Reset Election</button>
+    </form>
+
+    <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin_pending_voters', key='admin123') }}">
+      Pending Requests
+    </a>
+  </div>
+
+  <div class="d-flex gap-2 flex-wrap">
+    <a class="btn btn-sm btn-outline-success" href="{{ url_for('admin_export_voters') }}?key=admin123">
+      Download Voters (Excel)
+    </a>
+    <a class="btn btn-sm btn-outline-success" href="{{ url_for('admin_export_votes') }}?key=admin123">
+      Download Votes (Excel)
+    </a>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-12 col-md-6 col-xl-3">
+    <div class="tile" style="background:#6c757d;">
+      <div class="tile-body">
+        <div class="num">{{ positions_count }}</div>
+        <div class="label">No. of Positions</div>
+      </div>
+      <a class="more" href="{{ url_for('admin_positions', key='admin123') }}">Manage Positions</a>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-6 col-xl-3">
+    <div class="tile" style="background:#198754;">
+      <div class="tile-body">
+        <div class="num">{{ candidates_count }}</div>
+        <div class="label">No. of Candidates</div>
+      </div>
+      <a class="more" href="{{ url_for('admin_candidates', key='admin123') }}">Manage Candidates</a>
+    </div>
+  </div>
+
+  <!-- CLICKABLE: Total Voters -->
+  <div class="col-12 col-md-6 col-xl-3">
+    <div class="tile" style="background:#0d6efd;">
+      <div class="tile-body">
+        <div class="num">{{ total_voters }}</div>
+        <div class="label">Total Voters</div>
+      </div>
+      <a class="more" href="{{ url_for('admin_voters', key='admin123') }}">Registered</a>
+    </div>
+  </div>
+
+  <!-- CLICKABLE: Voters Completed -->
+  <div class="col-12 col-md-6 col-xl-3">
+    <div class="tile" style="background:#d63384;">
+      <div class="tile-body">
+        <div class="num">{{ voters_voted }}</div>
+        <div class="label">Voters Completed</div>
+      </div>
+      <a class="more" href="{{ url_for('admin_votes', key='admin123') }}">Completed</a>
+    </div>
+  </div>
+</div>
+
+<div class="card-soft p-3 p-md-4 mb-3">
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+    <div>
+      <div class="fw-bold">Votes Tally</div>
+      <div class="small text-muted">One chart per active position</div>
+    </div>
+    <div class="small text-muted">Total votes: <strong>{{ total_votes }}</strong></div>
+  </div>
+
+  {% set _charts = charts|default([]) %}
+
+  {% if _charts|length == 0 %}
+    <div class="alert alert-warning mb-0">
+      No positions/charts available yet. Add positions and candidates first.
+    </div>
+  {% else %}
+    <div class="row g-3">
+      {% for ch in _charts %}
+      <div class="col-12 col-lg-6">
+        <div class="card-soft p-3">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <div class="fw-semibold">{{ ch.position_title }}</div>
+            <span class="badge text-bg-secondary">Position</span>
+          </div>
+
+          {% if not ch.labels or ch.labels|length == 0 %}
+            <div class="alert alert-light border mb-0">
+              No votes yet for this position.
+            </div>
+          {% else %}
+            <div class="chart-box">
+              <canvas id="chart_pos_{{ ch.position_id }}"></canvas>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+
+<div class="card-soft p-3 p-md-4">
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+    <div class="fw-bold">Recent Votes</div>
+    <input id="searchBox" class="form-control form-control-sm" style="max-width:360px"
+           placeholder="Search by ID / Name / Position / Candidate">
+  </div>
+
+  <div class="table-responsive" style="max-height: 440px;">
+    <table class="table table-sm table-hover align-middle" id="votesTable">
+      <thead class="table-light" style="position: sticky; top:0; z-index:1;">
+        <tr>
+          <th style="width:170px;">Time</th>
+          <th style="width:140px;">National ID</th>
+          <th>Name</th>
+          <th style="width:180px;">Position</th>
+          <th style="width:220px;">Candidate</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for v in votes %}
+        <tr>
+          <td class="text-muted">{{ v["cast_at"] }}</td>
+          <td class="fw-semibold">{{ v["national_id"] }}</td>
+          <td>{{ v["full_name"] if v["full_name"] else "" }}</td>
+          <td><span class="badge text-bg-secondary">{{ v["position_title"] if v["position_title"] else "—" }}</span></td>
+          <td><span class="badge text-bg-dark">{{ v["candidate_name"] if v["candidate_name"] else "—" }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Search filter
+  const searchBox = document.getElementById("searchBox");
+  const votesTable = document.getElementById("votesTable");
+
+  searchBox?.addEventListener("input", () => {
+    const q = (searchBox.value || "").toLowerCase().trim();
+    votesTable.querySelectorAll("tbody tr").forEach(tr => {
+      tr.style.display = tr.innerText.toLowerCase().includes(q) ? "" : "none";
+    });
+  });
+
+  // Safe charts (never Undefined crash)
+  const charts = {{ (charts if charts is defined else [])|tojson }};
+
+  charts.forEach(ch => {
+    if (!ch || !ch.labels || ch.labels.length === 0) return;
+
+    const id = "chart_pos_" + ch.position_id;
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    new Chart(el, {
+      type: "bar",
+      data: {
+        labels: ch.labels,
+        datasets: [{
+          label: "Votes",
+          data: ch.values,
+          borderWidth: 1
+        }]
+      },
+      options: {
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: true }
+        },
+        scales: {
+          y: { beginAtZero: true, ticks: { precision: 0 } }
+        }
+      }
+    });
+  });
+</script>
+{% endblock %}

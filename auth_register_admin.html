@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-body p-4">
+    <h4 class="fw-bold mb-2">Admin Registration</h4>
+    <div class="text-muted mb-3">Create an admin account (restricted)</div>
+
+    <form method="POST">
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Email</label>
+        <input class="form-control form-control-lg" name="email" type="email" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Password</label>
+        <input class="form-control form-control-lg" name="password" type="password" required>
+      </div>
+
+      <button class="btn btn-dark btn-lg w-100">Create Admin</button>
+      <a class="btn btn-outline-secondary w-100 mt-2" href="{{ url_for('auth_login') }}">Back to Login</a>
+    </form>
+  </div>
+</div>
+{% endblock %}
